@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "graasp-pre-processing"
+version = "0.1.0"
+description = ""
+authors = ["Jérémy La Scala <jeremy.lascala@epfl.ch>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pandas = "^2.2.2"
+numpy = "^1.26.4"
+seaborn = "^0.13.2"
+matplotlib = "^3.8.4"
+pyproject-parser = "^0.11.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.4.2"
+pytest = "^8.2.0"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+pythonpath = [
+  "src"
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
