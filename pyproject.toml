@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "graasp-pre-processing"
+name = "graasp_pre_processing"
 version = "0.1.0"
 description = ""
 authors = ["Jérémy La Scala <jeremy.lascala@epfl.ch>"]
@@ -12,6 +12,7 @@ numpy = "^1.26.4"
 seaborn = "^0.13.2"
 matplotlib = "^3.8.4"
 pyproject-parser = "^0.11.0"
+pandera = "^0.18.3"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -3,7 +3,11 @@ from io import TextIOWrapper
 import pandas as pd
 from pathlib import Path
 
-from graasp_pre_processing.apps.expand_data import expand_app_data, expand_app_actions
+from graasp_pre_processing.apps.expand_data import (
+    expand_app_data,
+    expand_app_actions,
+    expand_app_settings,
+)
 
 
 def remove_item(piece_of_data):
@@ -26,23 +30,31 @@ def parse_actions(actions_raw, item):
     return actions
 
 
-def parse_data(app_data_raw, item):
+def parse_data(app_data_raw: list, item) -> pd.DataFrame:
+    # print("Type of app_data_raw:", type(app_data_raw))
     url = ""
     try:
         url = item["extra"]["app"]["url"]
     except KeyError as e:
         print(e)
     app_data = expand_app_data(filter_item_out(app_data_raw), url)
+    creatorId = app_data['creator'].apply(lambda x: x['id']).rename('creatorId')
+    app_data = app_data.join(creatorId)
     return app_data
 
 
-def parse_settings(settings_raw):
+def parse_settings(settings_raw) -> tuple[pd.DataFrame, dict]:
     item = settings_raw[0]["item"]
-    app_settings = pd.DataFrame(filter_item_out(settings_raw))
+    url = ""
+    try:
+        url = item["extra"]["app"]["url"]
+    except KeyError as e:
+        print(e)
+    app_settings = expand_app_settings(filter_item_out(settings_raw), url)
     return app_settings, item
 
 
-def parse_app_row(row):
+def parse_app_row(row: pd.Series):
     app_settings, item = parse_settings(row["settings"])
     app_actions = parse_actions(row["actions"], item)
     app_data = parse_data(row["data"], item)
@@ -57,22 +69,26 @@ def parse_app_row(row):
     )
 
 
-def parse_apps_data(filehandler: TextIOWrapper) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def parse_apps_data(
+    filehandler: TextIOWrapper,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Parse multiple apps data from an already opened file.
     """
     data = pd.read_json(filehandler, orient="index")
     data = data.apply(parse_app_row, axis="columns")
-    
-    app_data = pd.concat(data['app-data'].values)
-    app_actions = pd.concat(data['app-actions'].values)
-    app_settings = pd.concat(data['app-settings'].values)
-    items = pd.concat(data['item'].values)
+
+    app_data = pd.concat(data["app-data"].values)
+    app_actions = pd.concat(data["app-actions"].values)
+    app_settings = pd.concat(data["app-settings"].values)
+    items = pd.concat(data["item"].values)
 
     return app_data, app_actions, app_settings, items
 
 
-def parse_apps_data_from_file(path: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def parse_apps_data_from_file(
+    path,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     docstring
     """
