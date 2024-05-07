@@ -44,12 +44,15 @@ def parse_data(app_data_raw: list, item) -> pd.DataFrame:
 
 
 def parse_settings(settings_raw) -> tuple[pd.DataFrame, dict]:
-    item = settings_raw[0]["item"]
-    url = ""
-    try:
-        url = item["extra"]["app"]["url"]
-    except KeyError as e:
-        print(e)
+    item = {}
+    url = ''
+    if(len(settings_raw) > 0):
+        item = settings_raw[0]["item"]
+        url = ""
+        try:
+            url = item["extra"]["app"]["url"]
+        except KeyError as e:
+            print(e)
     app_settings = expand_app_settings(filter_item_out(settings_raw), url)
     return app_settings, item
 
