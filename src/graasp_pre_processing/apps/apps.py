@@ -62,12 +62,14 @@ def parse_app_row(row: pd.Series):
     app_actions = parse_actions(row["actions"], item)
     app_data = parse_data(row["data"], item)
 
+    itemDf = pd.DataFrame(item, index=['id'])
+
     return pd.Series(
         {
             "app-data": app_data,
             "app-settings": app_settings,
             "app-actions": app_actions,
-            "item": pd.DataFrame(item),
+            "item": itemDf,
         }
     )
 

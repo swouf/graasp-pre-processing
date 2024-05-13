@@ -104,6 +104,9 @@ class TestApps:
         assert isinstance(app_settings, pd.DataFrame)
         assert isinstance(items, pd.DataFrame)
 
+        print(items.sample(5).head(5))
+        assert items['id'].is_unique
+
     def test_parse_data(self, app_data_raw, item):
         parsed = parse_data(*app_data_raw, item)
         print(parsed.columns.values)
