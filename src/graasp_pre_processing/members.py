@@ -7,6 +7,7 @@ def parse_members(filehandler: TextIOWrapper) -> pd.DataFrame:
     data = pd.read_json(filehandler)
     return data
 
+
 def parse_members_from_file(
     path,
 ) -> pd.DataFrame:

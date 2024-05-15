@@ -2,6 +2,12 @@ from graasp_pre_processing.apps.apps import parse_apps_data, parse_data
 import pandas as pd
 import pytest
 from pathlib import Path
+import sys
+
+import logging
+
+logging.basicConfig(stream=sys.stdout, level=logging.debug)
+log = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -9,6 +15,7 @@ def apps_data_file():
     current_path = Path(__file__).parent
 
     return [open(Path(current_path / "fixtures/apps_data.json"), "r+t")]
+    # return [open(Path(current_path / "fixtures/apps_data_2.json"), "r+t")]
 
 
 @pytest.fixture
@@ -104,8 +111,11 @@ class TestApps:
         assert isinstance(app_settings, pd.DataFrame)
         assert isinstance(items, pd.DataFrame)
 
-        print(items.sample(5).head(5))
-        assert items['id'].is_unique
+        log.debug(items.sample(5).head(5))
+
+        assert app_settings.index.name == "id"
+        assert items.index.name == "id"
+        assert items.index.is_unique
 
     def test_parse_data(self, app_data_raw, item):
         parsed = parse_data(*app_data_raw, item)
