@@ -23,30 +23,35 @@ def filter_item_out(data_raw: list):
     return list(map(remove_item, data_raw))
 
 
-def parse_actions(actions_raw, item):
+def get_url_from_item(item):
     url = ""
     try:
         url = item["extra"]["app"]["url"]
     except KeyError as e:
         log.warning(e)
+    return url
+
+
+def transform_creator_to_id(data: pd.DataFrame):
+    creatorId = ""
+    try:
+        creatorId = data["creator"].apply(lambda x: x["id"]).rename("creatorId")
+    except KeyError as e:
+        log.warning(e)
+    return data.join(creatorId)
+
+
+def parse_actions(actions_raw, item):
+    url = get_url_from_item(item)
     actions = expand_app_actions(actions_raw, url)
     return actions
 
 
 def parse_data(app_data_raw: list, item) -> pd.DataFrame:
     log.debug("Type of app_data_raw: %s", str(type(app_data_raw)))
-    url = ""
-    try:
-        url = item["extra"]["app"]["url"]
-    except KeyError as e:
-        log.warning(e)
+    url = get_url_from_item(item)
     app_data = expand_app_data(filter_item_out(app_data_raw), url)
-    creatorId = ""
-    try:
-        creatorId = app_data["creator"].apply(lambda x: x["id"]).rename("creatorId")
-    except KeyError as e:
-        log.warning(e)
-    app_data = app_data.join(creatorId)
+    app_data = transform_creator_to_id(app_data)
     return app_data
 
 
@@ -56,11 +61,7 @@ def parse_settings(settings_raw: list) -> tuple[pd.DataFrame | None, dict]:
     if len(settings_raw) > 0:
         item = settings_raw[0]["item"]
         log.debug("Item: %s", item)
-        url = ""
-        try:
-            url = item["extra"]["app"]["url"]
-        except KeyError as e:
-            log.warning(e)
+        url = get_url_from_item(item)
     app_settings = expand_app_settings(filter_item_out(settings_raw), url)
     log.debug("App settings expanded.")
     return app_settings, item

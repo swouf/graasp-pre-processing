@@ -111,11 +111,12 @@ class TestApps:
         assert isinstance(app_settings, pd.DataFrame)
         assert isinstance(items, pd.DataFrame)
 
-        log.debug(items.sample(5).head(5))
+        log.debug(items.head(5))
 
         assert app_settings.index.name == "id"
         assert items.index.name == "id"
         assert items.index.is_unique
+        assert not items.index.hasnans
 
     def test_parse_data(self, app_data_raw, item):
         parsed = parse_data(*app_data_raw, item)
