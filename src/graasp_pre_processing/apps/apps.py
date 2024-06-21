@@ -55,20 +55,19 @@ def parse_data(app_data_raw: list, item) -> pd.DataFrame:
     return app_data
 
 
-def parse_settings(settings_raw: list) -> tuple[pd.DataFrame | None, dict]:
-    item = {}
-    url = ""
-    if len(settings_raw) > 0:
-        item = settings_raw[0]["item"]
-        log.debug("Item: %s", item)
-        url = get_url_from_item(item)
+def parse_settings(settings_raw: list, item: dict) -> tuple[pd.DataFrame | None, dict]:
+    url = get_url_from_item(item)
     app_settings = expand_app_settings(filter_item_out(settings_raw), url)
     log.debug("App settings expanded.")
     return app_settings, item
 
-
 def parse_app_row(row: pd.Series):
-    app_settings, item = parse_settings(row["settings"])
+    item = {}
+    for app_state_list in [row["settings"], row["actions"], row["data"]]:
+      if len(app_state_list) > 0:
+        item = app_state_list[0]["item"]
+        break
+    app_settings, item = parse_settings(row["settings"], item)
     app_actions = parse_actions(row["actions"], item)
     app_data = parse_data(row["data"], item)
 
@@ -130,9 +129,7 @@ def parse_apps_data_from_file(
 
 
 if __name__ == "__main__":
-    # from pyproject_parser import PyProject
-    # project = PyProject()
-    # project.load("pyproject.toml")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("filename")
 

@@ -14,8 +14,8 @@ log = logging.getLogger(__name__)
 def apps_data_file():
     current_path = Path(__file__).parent
 
-    return [open(Path(current_path / "fixtures/apps_data.json"), "r+t")]
-    # return [open(Path(current_path / "fixtures/apps_data_2.json"), "r+t")]
+    # return [open(Path(current_path / "fixtures/apps_data.json"), "r+t")]
+    return [open(Path(current_path / "fixtures/apps_data_2.json"), "r+t")]
 
 
 @pytest.fixture
