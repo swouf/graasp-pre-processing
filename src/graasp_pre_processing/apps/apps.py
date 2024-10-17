@@ -102,24 +102,19 @@ def parse_app_row(row: pd.Series):
 
 def parse_apps_data(
     filehandler: TextIOWrapper,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> pd.DataFrame:
     """
     Parse multiple apps data from an already opened file.
     """
     data = pd.read_json(filehandler, orient="index")
     data = data.apply(parse_app_row, axis="columns")
 
-    app_data = pd.concat(data["app-data"].values)
-    app_actions = pd.concat(data["app-actions"].values)
-    app_settings = pd.concat(data["app-settings"].values)
-    items = pd.concat(data["item"].values).set_index("id")
-
-    return app_data, app_actions, app_settings, items
+    return data
 
 
 def parse_apps_data_from_file(
     path,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> pd.DataFrame:
     """
     docstring
     """
