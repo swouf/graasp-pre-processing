@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "src"
+        "src",
+        "./src/graasp_pre_processing/apps/survey"
     ]
 }
