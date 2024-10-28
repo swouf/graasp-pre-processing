@@ -36,12 +36,12 @@ def transform_destructure_to_id(data: pd.DataFrame, account=True):
     d = data
     try:
         creatorId = data["creator"].apply(lambda x: x["id"]).rename("creatorId")
-        d = d.join(creatorId)
+        d = d.join(creatorId).drop('creator', axis="columns")
         if account:
             accountId = data["account"].apply(lambda x: x["id"]).rename("accountId")
-            d = d.join(accountId)
+            d = d.join(accountId).drop('account', axis="columns")
         itemId = data["item"].apply(lambda x: x["id"]).rename("itemId")
-        d = d.join(itemId)
+        d = d.join(itemId).drop('item', axis="columns")
     except KeyError as e:
         log.warning(e)
     return d

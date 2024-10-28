@@ -37,7 +37,7 @@ def process_likert_scale_app_data(app_data_df: pd.DataFrame, app_settings_df: pd
     d = d.sort_values("updatedAt").groupby("creatorId").last()
     try:
         likertItem = app_settings_df.set_index('name').loc['likertItem']['data']['item']
-        label = likertItem['label']
+        label = likertItem['key']
     except Exception as e:
         log.warning(e)
     if len(label) == 0 or force_columns_item_id:
@@ -65,14 +65,29 @@ def process_single_survey_app_data(app_data_df, app_settings_df, apps, force_col
                 return process_likert_scale_app_data(app_data_df, app_settings_df, itemId, force_columns_item_id)
             case 'short-answer':
                 return process_short_answer_app_data(app_data_df, app_settings_df, itemId)
+            case _:
+                log.warning("No app recognized for item %s", itemId)
+                return None
 
 @check_input(app_data_schema)
 def get_df_answer(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, items_df, force_columns_item_id=False):
     apps = items_df.where(items_df['type'] == 'app').dropna(how='all')
     apps['url'] = apps['extra'].apply(lambda x: x['app']['url'])
-    apps['app'] = apps['url'].apply(get_app_type_from_url)
+    apps['app'] = apps['url'].apply(get_app_type_from_url).fillna('no-app')
 
     data_split, settings_split = split_by_item(app_data_df, app_settings_df)
-    survey_split_df = [process_single_survey_app_data(data_split[key], settings_split[key], apps, force_columns_item_id) for key in data_split.keys()]
+
+    survey_split_df = []
+    for key in data_split.keys():
+        
+        ad = data_split[key]
+        try:
+            s = settings_split[key]
+        except KeyError as e:
+            log.warning("No such thing as %s", key, exc_info=True)
+            s = None
+
+        part = process_single_survey_app_data(ad, s, apps, force_columns_item_id)
+        survey_split_df.append(part)
 
     return pd.concat(survey_split_df, axis="columns")
