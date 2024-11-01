@@ -47,7 +47,7 @@ def get_last_response(row) -> dict:
     response = None
     responses_chain = pd.NA
     if isinstance(r, list):
-        response = r[0]
+        response = r[-1]
         responses_chain = r
     else:
         response = r
@@ -85,4 +85,4 @@ def get_df_responses(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, i
     data_split, settings_split = split_by_item(app_data_df, app_settings_df)
     collab_app_split_df = [process_single_app(data_split[key], settings_split[key], apps) for key in data_split.keys()]
 
-    return pd.concat(collab_app_split_df, axis="index")
+    return pd.concat(collab_app_split_df, axis="index").sort_index(axis="columns")

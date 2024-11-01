@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "graasp_pre_processing"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Jérémy La Scala <jeremy.lascala@epfl.ch>"]
 readme = "README.md"

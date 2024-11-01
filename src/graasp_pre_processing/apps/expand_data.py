@@ -2,7 +2,8 @@ import logging
 import pandas as pd
 from urllib.parse import urlparse
 
-from graasp_pre_processing.apps import collaborative_ideation, likert_scale, short_answer
+from graasp_pre_processing.apps import likert_scale, short_answer
+from graasp_pre_processing.apps.collaborative_ideation import collaborative_ideation
 
 log = logging.getLogger(__name__)
 

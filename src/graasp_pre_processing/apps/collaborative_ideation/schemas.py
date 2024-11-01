@@ -17,4 +17,4 @@ responses_schema = pa.DataFrameSchema({
     "visibilityMode": pa.Column(str),
     "assistantId": pa.Column(str, nullable=True),
     "parentId": pa.Column(str, nullable=True),
-}, index=pa.Index(str))
+}, index=pa.Index(str), add_missing_columns=True)
