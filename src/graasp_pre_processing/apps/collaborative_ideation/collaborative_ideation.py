@@ -23,6 +23,14 @@ def get_app_type_from_url(url: str) -> str:
         return collaborative_ideation_app_name
     else:
         return pd.NA
+    
+def get_instructions(app_settings_df: pd.DataFrame) -> str:
+    try:
+        instructions = app_settings_df.set_index('name').loc['instructions']['data']['title']['content']
+        return instructions
+    except Exception as e:
+        log.info("No instructions found.")
+        return pd.NA
 
 def get_number_of_assistants(app_settings_df: pd.DataFrame) -> int:
     try:
@@ -60,6 +68,8 @@ def process_single_app(app_data_df, app_settings_df, apps):
     else:
         itemId = itemIds[0]
         app = apps.loc[itemId]
+        if pd.isna(app['app']):
+            return None
         if app['app'] != collaborative_ideation_app_name:
             return None
         responses = app_data_df.where(app_data_df['type'] == 'response').dropna(how='all')
@@ -74,6 +84,7 @@ def process_single_app(app_data_df, app_settings_df, apps):
             responses['bot'] = False
         responses['numberOfAssistants'] = get_number_of_assistants(app_settings_df)
         responses['visibilityMode'] = get_visibility_mode(app_settings_df)
+        responses['instructions'] = get_instructions(app_settings_df)
         return responses
 
 @check_io(out=responses_schema, app_data_df=app_data_schema, app_settings_df=app_settings_schema)
