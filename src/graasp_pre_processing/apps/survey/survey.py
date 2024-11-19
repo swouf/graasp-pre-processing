@@ -11,12 +11,15 @@ log = logging.getLogger(__name__)
 url_multiple_choice = "https://apps.graasp.org/b5428aa6-00cf-4382-ac6e-0b0c4367b9a2/latest/index.html"
 url_likert_scale = "https://apps.graasp.org/fef4a130-0fbc-47f4-bc41-48e3ba0c41b4/latest/index.html"
 url_short_answer = "https://apps.graasp.org/75438e6e-8442-4ffe-9a16-d1bebf5f8952/latest/index.html"
+url_long_answer = "https://apps.graasp.org/3497dc8d-79cd-4768-8b0b-ce34e9876df0/latest/index.html"
 
 survey_apps_urls = {
     url_multiple_choice: "multiple-choice",
     url_likert_scale: "likert-scale",
     url_short_answer: "short-answer",
+    url_long_answer: "long-answer",
 }
+
 
 def get_app_type_from_url(url: str) -> str:
     try:
@@ -25,14 +28,20 @@ def get_app_type_from_url(url: str) -> str:
         log.debug(e)
         return pd.NA
 
+
 @check_io(app_data_df=app_data_schema, app_settings_df=app_settings_schema)
 def process_multiple_choice_app_data(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, itemId: str):
     d = app_data_df.where(app_data_df['type'] == 'user-answer').dropna(how='all')
     d = d.sort_values("updatedAt").groupby("creatorId").last()
-    return d['data'].apply(lambda x: x['multipleKey']).rename(itemId)
+    if d['data'].apply(lambda x: 'multipleKey' in x.keys()).iloc[0]:
+        return d['data'].apply(lambda x: x['multipleKey']).rename(itemId)
+    else:
+        return d['data'].apply(lambda x: x['singleKey']).rename(itemId)
+
 
 @check_io(app_data_df=app_data_schema, app_settings_df=app_settings_schema)
-def process_likert_scale_app_data(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, itemId: str, force_columns_item_id=False):
+def process_likert_scale_app_data(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, itemId: str,
+                                  force_columns_item_id=False):
     d = app_data_df.where(app_data_df['type'] == 'user-answer').dropna(how='all')
     d = d.sort_values("updatedAt").groupby("creatorId").last()
     try:
@@ -44,12 +53,14 @@ def process_likert_scale_app_data(app_data_df: pd.DataFrame, app_settings_df: pd
         label = itemId
     return d['data'].apply(lambda x: x['answer']).rename(label)
 
+
 @check_io(app_data_df=app_data_schema, app_settings_df=app_settings_schema)
 def process_short_answer_app_data(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, itemId: str):
     d = app_data_df.where(app_data_df['type'] == 'user-answer').dropna(how='all')
     d = d.sort_values("updatedAt").groupby("creatorId").last()
     return d['data'].apply(lambda x: x['answer']).rename(itemId)
-    
+
+
 def process_single_survey_app_data(app_data_df, app_settings_df, apps, force_columns_item_id=False):
     itemIds = app_data_df['itemId'].unique()
     if len(itemIds) > 1:
@@ -62,12 +73,15 @@ def process_single_survey_app_data(app_data_df, app_settings_df, apps, force_col
             case 'multiple-choice':
                 return process_multiple_choice_app_data(app_data_df, app_settings_df, itemId)
             case 'likert-scale':
-                return process_likert_scale_app_data(app_data_df, app_settings_df, itemId, force_columns_item_id)
+                return process_likert_scale_app_data(app_data_df, app_settings_df, itemId, True)
             case 'short-answer':
+                return process_short_answer_app_data(app_data_df, app_settings_df, itemId)
+            case 'long-answer':
                 return process_short_answer_app_data(app_data_df, app_settings_df, itemId)
             case _:
                 log.warning("No app recognized for item %s", itemId)
                 return None
+
 
 @check_input(app_data_schema)
 def get_df_answer(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, items_df, force_columns_item_id=False):
@@ -79,7 +93,7 @@ def get_df_answer(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, item
 
     survey_split_df = []
     for key in data_split.keys():
-        
+
         ad = data_split[key]
         try:
             s = settings_split[key]

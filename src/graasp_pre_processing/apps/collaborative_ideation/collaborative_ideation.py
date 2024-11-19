@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 import logging
@@ -13,16 +14,19 @@ log = logging.getLogger(__name__)
 url_collaborative_ideation = "https://apps.graasp.org/ff82329a-905a-4c59-85e0-3690113adc42/latest/index.html"
 collaborative_ideation_app_name = 'collaborative-ideation'
 
+
 def expand_data_field(row):
     d = row.to_dict()
     data_field = d.pop("data")
     return pd.Series(d | data_field)
+
 
 def get_app_type_from_url(url: str) -> str:
     if url == url_collaborative_ideation:
         return collaborative_ideation_app_name
     else:
         return pd.NA
+
 
 def get_number_of_assistants(app_settings_df: pd.DataFrame) -> int:
     try:
@@ -32,7 +36,8 @@ def get_number_of_assistants(app_settings_df: pd.DataFrame) -> int:
     except Exception as e:
         log.info("No assistants found.")
         return pd.NA
-    
+
+
 def get_visibility_mode(app_settings_df: pd.DataFrame) -> str:
     try:
         m = app_settings_df.set_index('name').loc['activity']['data']['mode']
@@ -41,7 +46,8 @@ def get_visibility_mode(app_settings_df: pd.DataFrame) -> str:
     except Exception as e:
         log.info("Visibility mode undefined.")
         return pd.NA
-    
+
+
 def get_last_response(row) -> dict:
     r = row['response']
     response = None
@@ -52,7 +58,8 @@ def get_last_response(row) -> dict:
     else:
         response = r
     return pd.Series({"response": response, "responsesChain": responses_chain})
-    
+
+
 def process_single_app(app_data_df, app_settings_df, apps):
     itemIds = app_data_df['itemId'].unique()
     if len(itemIds) > 1:
@@ -60,21 +67,26 @@ def process_single_app(app_data_df, app_settings_df, apps):
     else:
         itemId = itemIds[0]
         app = apps.loc[itemId]
-        if app['app'] != collaborative_ideation_app_name:
-            return None
-        responses = app_data_df.where(app_data_df['type'] == 'response').dropna(how='all')
-        responses = responses.apply(expand_data_field, axis="columns")
-        log.debug(responses.columns)
-        responses = responses.drop('response', axis="columns")\
-            .join(responses.apply(get_last_response, result_type="expand", axis="columns"))
-        log.debug(responses.columns)
-        if 'bot' in responses.columns:
-            responses['bot'] = responses['bot'].fillna(False)
+        if pd.notna(app['app']) and app['app'] == collaborative_ideation_app_name:
+            responses = app_data_df.where(app_data_df['type'] == 'response').dropna(how='all')
+            responses = responses.apply(expand_data_field, axis="columns")
+            log.debug(responses.columns)
+            responses = responses.drop('response', axis="columns") \
+                .join(responses.apply(get_last_response, result_type="expand", axis="columns"))
+            log.debug(responses.columns)
+            if 'bot' in responses.columns:
+                responses['bot'] = responses['bot'].fillna(False)
+            else:
+                responses['bot'] = False
+            responses['numberOfAssistants'] = get_number_of_assistants(app_settings_df)
+            responses['visibilityMode'] = get_visibility_mode(app_settings_df)
+            if not 'assistantId' in responses.columns:
+                responses.insert(1, 'assistantId', np.nan)
+
+            return responses
         else:
-            responses['bot'] = False
-        responses['numberOfAssistants'] = get_number_of_assistants(app_settings_df)
-        responses['visibilityMode'] = get_visibility_mode(app_settings_df)
-        return responses
+            return None
+
 
 @check_io(out=responses_schema, app_data_df=app_data_schema, app_settings_df=app_settings_schema)
 def get_df_responses(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, items_df):
