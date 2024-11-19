@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 import logging
@@ -13,10 +14,12 @@ log = logging.getLogger(__name__)
 url_collaborative_ideation = "https://apps.graasp.org/ff82329a-905a-4c59-85e0-3690113adc42/latest/index.html"
 collaborative_ideation_app_name = 'collaborative-ideation'
 
+
 def expand_data_field(row):
     d = row.to_dict()
     data_field = d.pop("data")
     return pd.Series(d | data_field)
+
 
 def get_app_type_from_url(url: str) -> str:
     if url == url_collaborative_ideation:
@@ -32,6 +35,7 @@ def get_instructions(app_settings_df: pd.DataFrame) -> str:
         log.info("No instructions found.")
         return pd.NA
 
+
 def get_number_of_assistants(app_settings_df: pd.DataFrame) -> int:
     try:
         n = len(app_settings_df.set_index('name').loc['assistants']['data']['assistants'])
@@ -40,7 +44,8 @@ def get_number_of_assistants(app_settings_df: pd.DataFrame) -> int:
     except Exception as e:
         log.info("No assistants found.")
         return pd.NA
-    
+
+
 def get_visibility_mode(app_settings_df: pd.DataFrame) -> str:
     try:
         m = app_settings_df.set_index('name').loc['activity']['data']['mode']
@@ -49,7 +54,8 @@ def get_visibility_mode(app_settings_df: pd.DataFrame) -> str:
     except Exception as e:
         log.info("Visibility mode undefined.")
         return pd.NA
-    
+
+
 def get_last_response(row) -> dict:
     r = row['response']
     response = None
