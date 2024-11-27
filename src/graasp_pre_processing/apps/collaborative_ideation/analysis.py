@@ -12,7 +12,7 @@ def compute_childrens(id: str, responses: pd.DataFrame) -> int:
     grand_childrens = childrens.apply(lambda x: compute_childrens(x, responses)).sum()
     return childrens.count() + grand_childrens
 
-@check_input(responses_schema)
+# @check_input(responses_schema)
 def compute_nbr_of_childrens(responses: pd.DataFrame) -> pd.DataFrame:
     """Compute the number of childrens (direct childrens + grand childrens) for each response.
 

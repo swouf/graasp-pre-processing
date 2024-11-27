@@ -1,7 +1,7 @@
 import pandas as pd
 
 import logging
-from pandera import check_io
+from pandera import check_io, check_output
 
 from graasp_pre_processing.apps.utils import split_by_item
 
@@ -60,8 +60,21 @@ def get_last_response(row) -> dict:
     else:
         response = r
     return pd.Series({"response": response, "responsesChain": responses_chain})
-    
-def process_single_app(app_data_df, app_settings_df, apps):
+
+def get_votes(app_data_df: pd.DataFrame) -> pd.Series:
+    votes = app_data_df.where(app_data_df['type'] == 'Vote')\
+        .dropna(how='all')\
+        .apply(expand_data_field, axis="columns")\
+        .reset_index()
+    if votes.empty:
+        return None
+    votes = votes.get(['id', 'responseRef']).groupby('responseRef').count()['id'].rename('numberOfVotes')
+    log.debug(votes)
+    return votes
+
+
+# @check_io(out=responses_schema, lazy=True)
+def process_single_app(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, apps) -> pd.DataFrame:
     itemIds = app_data_df['itemId'].unique()
     if len(itemIds) > 1:
         raise Exception("The itemId is not unique.")
@@ -72,12 +85,23 @@ def process_single_app(app_data_df, app_settings_df, apps):
             return None
         if app['app'] != collaborative_ideation_app_name:
             return None
+        log.debug("Processing single app...")
         responses = app_data_df.where(app_data_df['type'] == 'response').dropna(how='all')
         responses = responses.apply(expand_data_field, axis="columns")
-        log.debug(responses.columns)
+        if 'response' not in responses.columns.values:
+            return None
+        log.debug(responses.columns.values)
+
         responses = responses.drop('response', axis="columns")\
             .join(responses.apply(get_last_response, result_type="expand", axis="columns"))
         log.debug(responses.columns)
+
+        votes = get_votes(app_data_df)
+        if votes is not None:
+            responses = responses.join(votes)
+            responses['numberOfVotes'] = responses['numberOfVotes'].fillna(0)
+            log.debug("Responses with votes:")
+            log.debug(responses['numberOfVotes'])
         if 'bot' in responses.columns:
             responses['bot'] = responses['bot'].fillna(False)
         else:
@@ -87,7 +111,8 @@ def process_single_app(app_data_df, app_settings_df, apps):
         responses['instructions'] = get_instructions(app_settings_df)
         return responses
 
-@check_io(out=responses_schema, app_data_df=app_data_schema, app_settings_df=app_settings_schema)
+# @check_io(app_data_df=app_data_schema, app_settings_df=app_settings_schema)
+@check_io(out=responses_schema, app_data_df=app_data_schema, app_settings_df=app_settings_schema, lazy=True)
 def get_df_responses(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, items_df):
     apps = items_df.where(items_df['type'] == 'app').dropna(how='all')
     apps['url'] = apps['extra'].apply(lambda x: x['app']['url'])
@@ -95,5 +120,6 @@ def get_df_responses(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, i
 
     data_split, settings_split = split_by_item(app_data_df, app_settings_df)
     collab_app_split_df = [process_single_app(data_split[key], settings_split[key], apps) for key in data_split.keys()]
-
-    return pd.concat(collab_app_split_df, axis="index").sort_index(axis="columns")
+    
+    all_responses = pd.concat(collab_app_split_df, axis="index").sort_index(axis="columns")
+    return all_responses
