@@ -47,6 +47,7 @@ def process_likert_scale_app_data(app_data_df: pd.DataFrame, app_settings_df: pd
     try:
         likertItem = app_settings_df.set_index('name').loc['likertItem']['data']['item']
         label = likertItem['key']
+        log.debug("Label will be %s", label)
     except Exception as e:
         log.warning(e)
     if len(label) == 0 or force_columns_item_id:
@@ -54,10 +55,11 @@ def process_likert_scale_app_data(app_data_df: pd.DataFrame, app_settings_df: pd
     return d['data'].apply(lambda x: x['answer']).rename(label)
 
 
-@check_io(app_data_df=app_data_schema, app_settings_df=app_settings_schema)
-def process_short_answer_app_data(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, itemId: str):
+@check_io(app_data_df=app_data_schema)
+def process_short_answer_app_data(app_data_df: pd.DataFrame, itemId: str):
     d = app_data_df.where(app_data_df['type'] == 'user-answer').dropna(how='all')
     d = d.sort_values("updatedAt").groupby("creatorId").last()
+    log.debug("ItemId: %s", itemId)
     return d['data'].apply(lambda x: x['answer']).rename(itemId)
 
 
@@ -73,11 +75,12 @@ def process_single_survey_app_data(app_data_df, app_settings_df, apps, force_col
             case 'multiple-choice':
                 return process_multiple_choice_app_data(app_data_df, app_settings_df, itemId)
             case 'likert-scale':
-                return process_likert_scale_app_data(app_data_df, app_settings_df, itemId, True)
+                return process_likert_scale_app_data(app_data_df, app_settings_df, itemId, force_columns_item_id)
             case 'short-answer':
-                return process_short_answer_app_data(app_data_df, app_settings_df, itemId)
+                return process_short_answer_app_data(app_data_df, itemId)
             case 'long-answer':
-                return process_short_answer_app_data(app_data_df, app_settings_df, itemId)
+                # Same as short answer
+                return process_short_answer_app_data(app_data_df, itemId)
             case _:
                 log.warning("No app recognized for item %s", itemId)
                 return None

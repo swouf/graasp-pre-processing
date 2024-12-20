@@ -46,9 +46,23 @@ def transform_destructure_to_id(data: pd.DataFrame, account=True):
         log.warning(e)
     return d
 
+def destructure_actions(data: pd.DataFrame):
+    accountId = None
+    d = data.copy()
+    try:
+        accountId = data["account"].apply(lambda x: x['id']).rename("accountId")
+        d = d.join(accountId).drop('account', axis="columns")
+    except KeyError as e:
+        log.warning(e, exc_info=True)
+    return d
 
 def parse_actions(actions_raw):
-    actions = pd.DataFrame(actions_raw)
+    actions = destructure_actions(pd.DataFrame(actions_raw))
+    log.debug("Columns:", actions.columns)
+    try:
+        actions['createdAt'] = pd.to_datetime(actions['createdAt'])
+    except KeyError as e:
+        log.warning(e)
     return actions
 
 

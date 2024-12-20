@@ -74,12 +74,14 @@ def get_votes(app_data_df: pd.DataFrame) -> pd.Series:
         .reset_index()
     if votes.empty:
         return None
-    votes = votes.get(['id', 'responseRef']).groupby('responseRef').count()['id'].rename('numberOfVotes')
+    votes = pd.Series(votes.get(['id', 'responseRef']).groupby('responseRef')\
+        .count()['id']\
+        .rename('numberOfVotes'), dtype=pd.Int64Dtype)
     log.debug(votes)
     return votes
 
 
-# @check_io(out=responses_schema, lazy=True)
+@check_io(out=responses_schema, lazy=True)
 def process_single_app(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, apps) -> pd.DataFrame:
     itemIds = app_data_df['itemId'].unique()
     if len(itemIds) > 1:
@@ -119,7 +121,7 @@ def process_single_app(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame,
 
 # @check_io(app_data_df=app_data_schema, app_settings_df=app_settings_schema)
 @check_io(out=responses_schema, app_data_df=app_data_schema, app_settings_df=app_settings_schema, lazy=True)
-def get_df_responses(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, items_df):
+def get_df_responses(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, items_df, item_ids_to_filter: list[str]=None):
     apps = items_df.where(items_df['type'] == 'app').dropna(how='all')
     apps['url'] = apps['extra'].apply(lambda x: x['app']['url'])
     apps['app'] = apps['url'].apply(get_app_type_from_url)
@@ -128,4 +130,8 @@ def get_df_responses(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, i
     collab_app_split_df = [process_single_app(data_split[key], settings_split[key], apps) for key in data_split.keys()]
     
     all_responses = pd.concat(collab_app_split_df, axis="index").sort_index(axis="columns")
+    
+    if item_ids_to_filter is not None:
+        all_responses = all_responses[all_responses['itemId'].isin(item_ids_to_filter) == False]  # noqa: E712
+
     return all_responses
