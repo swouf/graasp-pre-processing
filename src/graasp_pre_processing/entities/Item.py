@@ -15,7 +15,6 @@ class Item:
             data = json.load(filehandler)[0]
         self.id = data['id']
         self.name = data['name']
-        self.displayName = data['displayName']
         self.description = data['description']
         self.type = data['type']
         ca = data['createdAt']

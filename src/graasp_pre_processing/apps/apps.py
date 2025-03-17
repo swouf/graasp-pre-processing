@@ -52,6 +52,8 @@ def destructure_actions(data: pd.DataFrame):
     try:
         accountId = data["account"].apply(lambda x: x['id']).rename("accountId")
         d = d.join(accountId).drop('account', axis="columns")
+        itemId = data["item"].apply(lambda x: x["id"]).rename("itemId")
+        d = d.join(itemId).drop('item', axis="columns")
     except KeyError as e:
         log.warning(e, exc_info=True)
     return d
@@ -69,6 +71,8 @@ def parse_actions(actions_raw):
 def parse_data(app_data_raw: list) -> pd.DataFrame:
     app_data_df = pd.DataFrame(app_data_raw)
     app_data_df = transform_destructure_to_id(app_data_df)
+    log.debug("WHAT THE FUCK!")
+    log.debug(app_data_df)
     app_data_df = app_data_df.set_index('id')
     app_data_df = app_data_schema.validate(app_data_df)
     return app_data_df
@@ -88,7 +92,9 @@ def parse_apps_data(
     Parse multiple apps data from an already opened file.
     """
     data = json.load(filehandler)
-    app_data_df = parse_data(data['appData'])
+    app_data_df = None
+    if len(data['appData']) > 0:
+        app_data_df = parse_data(data['appData'])
     app_actions_df = parse_actions(data['appActions'])
     app_settings_df = parse_settings(data['appSettings'])
     return app_data_df, app_actions_df, app_settings_df

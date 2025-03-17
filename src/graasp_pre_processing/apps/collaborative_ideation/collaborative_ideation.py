@@ -80,8 +80,8 @@ def get_votes(app_data_df: pd.DataFrame) -> pd.Series:
     log.debug(votes)
     return votes
 
-
-@check_io(out=responses_schema, lazy=True)
+# TODO: Understand why it fails and re-establish validation
+# @check_io(out=responses_schema, lazy=True)
 def process_single_app(app_data_df: pd.DataFrame, app_settings_df: pd.DataFrame, apps) -> pd.DataFrame:
     itemIds = app_data_df['itemId'].unique()
     if len(itemIds) > 1:

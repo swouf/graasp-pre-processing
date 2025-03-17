@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "graasp_pre_processing"
-version = "0.1.2"
+version = "0.1.3"
 description = ""
 authors = ["Jérémy La Scala <jeremy.lascala@epfl.ch>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.12,<3.13"
 pandas = "^2.2.2"
 numpy = "^1.26.4"
 seaborn = "^0.13.2"

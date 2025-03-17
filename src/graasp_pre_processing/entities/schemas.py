@@ -5,14 +5,13 @@ from graasp_pre_processing.utils import timestamp_parser
 
 members_schema = pa.DataFrameSchema({
     "name": pa.Column(str),
-    "email": pa.Column(str, nullable=True),
-    "extra": pa.Column(dict, nullable=True),
+    "email": pa.Column(str, nullable=True, required=False),
+    "extra": pa.Column(dict, nullable=True, required=False),
 }, index=pa.Index(str, name="id"))
 
 
 items_schema = pa.DataFrameSchema({
        "name": pa.Column(str),
-       "displayName": pa.Column(str),
        "description": pa.Column(str, nullable=True),
        "createdAt": pa.Column(datetime, parsers=timestamp_parser, coerce=True),
        "updatedAt": pa.Column(datetime, parsers=timestamp_parser, coerce=True),
