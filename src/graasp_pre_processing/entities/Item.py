@@ -20,6 +20,6 @@ class Item:
         ca = data['createdAt']
         self.createdAt = datetime.fromisoformat(ca)
         self.updatedAt = datetime.fromisoformat(data['updatedAt'])
-        self.deletedAt = get_deleted_at(data['deletedAt'])
+        # self.deletedAt = get_deleted_at(data['deletedAt'])
         self.settings = data['settings']
-        self.creatorId = data['creator']['id']
+        # self.creatorId = data['creator']['id']

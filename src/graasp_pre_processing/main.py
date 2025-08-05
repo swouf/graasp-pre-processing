@@ -13,7 +13,10 @@ from graasp_pre_processing.members import parse_members_from_file
 
 log = logging.getLogger(__name__)
 
-patternTemplate = Template(r"^$prefix\_\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}\.\d{1,}Z\.json$$")
+patternTemplate = Template(
+    r"^$prefix\_(\d{10}|"
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{1,}Z)\.json$$"
+)
 patternItem = compile(patternTemplate.substitute({"prefix": "item"}))
 patternApps = compile(patternTemplate.substitute({"prefix": "apps"}))
 patternDescendants = compile(patternTemplate.substitute({"prefix": "descendants"}))
