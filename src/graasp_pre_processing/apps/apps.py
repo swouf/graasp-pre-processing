@@ -59,7 +59,9 @@ def destructure_actions(data: pd.DataFrame):
     return d
 
 def parse_actions(actions_raw):
-    actions = destructure_actions(pd.DataFrame(actions_raw))
+    actions = pd.DataFrame(actions_raw)
+    if "itemId" not in actions.columns:
+        actions = destructure_actions(pd.DataFrame(actions_raw))
     log.debug("Columns:", actions.columns)
     try:
         actions['createdAt'] = pd.to_datetime(actions['createdAt'])
@@ -70,8 +72,8 @@ def parse_actions(actions_raw):
 
 def parse_data(app_data_raw: list) -> pd.DataFrame:
     app_data_df = pd.DataFrame(app_data_raw)
-    app_data_df = transform_destructure_to_id(app_data_df)
-    log.debug("WHAT THE FUCK!")
+    if "itemId" not in app_data_df.columns:
+        app_data_df = transform_destructure_to_id(app_data_df)
     log.debug(app_data_df)
     app_data_df = app_data_df.set_index('id')
     app_data_df = app_data_schema.validate(app_data_df)
@@ -80,7 +82,8 @@ def parse_data(app_data_raw: list) -> pd.DataFrame:
 
 def parse_settings(settings_raw: list) -> pd.DataFrame:
     app_settings = pd.DataFrame(settings_raw)
-    app_settings = transform_destructure_to_id(app_settings, account=False)
+    if "itemId" not in app_settings.columns:
+        app_settings = transform_destructure_to_id(app_settings, account=False)
     app_settings = app_settings.set_index("id")
     app_settings = app_settings_schema.validate(app_settings)
     return app_settings

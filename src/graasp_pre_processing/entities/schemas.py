@@ -15,7 +15,7 @@ items_schema = pa.DataFrameSchema({
        "description": pa.Column(str, nullable=True),
        "createdAt": pa.Column(datetime, parsers=timestamp_parser, coerce=True),
        "updatedAt": pa.Column(datetime, parsers=timestamp_parser, coerce=True),
-       "deletedAt": pa.Column(datetime, parsers=timestamp_parser, coerce=True, nullable=True),
+    #    "deletedAt": pa.Column(datetime, parsers=timestamp_parser, coerce=True, nullable=True),
        "settings": pa.Column(dict),
        "extra": pa.Column(dict),
        "path": pa.Column(str),

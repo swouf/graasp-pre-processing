@@ -9,9 +9,9 @@ app_data_schema = pa.DataFrameSchema({
     "data": pa.Column(dict),
     "createdAt": pa.Column(datetime, parsers=timestamp_parser, coerce=True),
     "updatedAt": pa.Column(datetime, parsers=timestamp_parser, coerce=True),
-    "accountId": pa.Column(str),
-    "creatorId": pa.Column(str),
-    "itemId": pa.Column(str),
+    "accountId": pa.Column(str, required=False),
+    "creatorId": pa.Column(str, required=False),
+    "itemId": pa.Column(str, required=False),
 }, index=pa.Index(str))
 
 app_settings_schema = pa.DataFrameSchema({
@@ -19,6 +19,6 @@ app_settings_schema = pa.DataFrameSchema({
     "data": pa.Column(dict),
     "createdAt": pa.Column(datetime, parsers=timestamp_parser, coerce=True),
     "updatedAt": pa.Column(datetime, parsers=timestamp_parser, coerce=True),
-    "creatorId": pa.Column(str),
-    "itemId": pa.Column(str),
+    "creatorId": pa.Column(str, required=False),
+    "itemId": pa.Column(str, required=False),
 }, index=pa.Index(str))
